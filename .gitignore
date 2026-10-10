@@ -14,3 +14,7 @@
 # Local mise overrides
 mise.local.toml
 .mise.local.toml
+
+# Trivy scan output
+trivy-results.json
+trivy-report.md

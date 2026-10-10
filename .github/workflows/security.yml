@@ -1,0 +1,46 @@
+name: Security
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: security-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: Trivy image scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: extractions/setup-just@v4
+        with:
+          just-version: "1.58.0"
+
+      # Fails on any CRITICAL finding, or any HIGH finding with a fix available.
+      - name: Build and scan image
+        run: just scan
+
+      - name: Comment on pull request
+        if: always() && hashFiles('trivy-report.md') != ''
+        run: |
+          cat trivy-report.md >> "$GITHUB_STEP_SUMMARY"
+          scripts/pr_comment.sh "$PR_NUMBER" trivy-report.md
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+
+      - name: Upload full results
+        if: always() && hashFiles('trivy-results.json') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: trivy-results
+          path: trivy-results.json
