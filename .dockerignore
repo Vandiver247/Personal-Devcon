@@ -3,3 +3,6 @@
 .gitignore
 README.md
 justfile
+scripts
+trivy-results.json
+trivy-report.md
