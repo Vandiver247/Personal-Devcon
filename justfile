@@ -1,7 +1,7 @@
 # CI tasks for the personal devcontainer image.
 # Override the image name or tag with e.g. `just tag=2026.10.10 push`.
 
-image := env("IMAGE", "personal-devcon")
+image := env("IMAGE", "vandiver247/personal-devcon")
 tag := env("TAG", "latest")
 local_ref := image + ":" + tag
 # With GITHUB_TOKEN set, mise authenticates its GitHub API calls during the build.
@@ -52,31 +52,9 @@ test: build
     EOF
     echo "all checks passed for {{ local_ref }}"
 
-# Build, test, then push to Docker Hub under the logged-in Docker user
+# Build, test, then push to Docker Hub (needs a `docker login` with push access)
 push: test
-    #!/usr/bin/env bash
-    set -euo pipefail
-    registry="https://index.docker.io/v1/"
-    config="${DOCKER_CONFIG:-$HOME/.docker}/config.json"
-    if [[ ! -f "$config" ]]; then
-        echo "not logged in to Docker Hub: run 'docker login' first" >&2
-        exit 1
-    fi
-    # The username lives in the credential helper if one is configured, else in config.json.
-    helper="$(jq -r --arg r "$registry" '.credHelpers[$r] // .credsStore // empty' "$config")"
-    if [[ -n "$helper" ]]; then
-        user="$(printf '%s' "$registry" | "docker-credential-$helper" get 2>/dev/null | jq -r '.Username // empty')" || user=""
-    else
-        user="$(jq -r --arg r "$registry" '.auths[$r].auth // empty' "$config" | base64 --decode | cut -d: -f1)"
-    fi
-    if [[ -z "$user" ]]; then
-        echo "not logged in to Docker Hub: run 'docker login' first" >&2
-        exit 1
-    fi
-    remote_ref="$user/{{ local_ref }}"
-    docker tag {{ local_ref }} "$remote_ref"
-    docker push "$remote_ref"
-    echo "pushed $remote_ref"
+    docker push {{ local_ref }}
 
 # Full CI pipeline: build, test, push
 ci: push

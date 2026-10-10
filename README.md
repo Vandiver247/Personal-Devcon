@@ -22,19 +22,21 @@ Exact versions live in [`mise.toml`](mise.toml).
 Requires Docker and [just](https://just.systems) on the host.
 
 ```sh
-just build   # build personal-devcon:latest
+just build   # build vandiver247/personal-devcon:latest
 just test    # build, then verify every pinned tool is installed and runs
-just push    # build, test, then push to Docker Hub as <logged-in-user>/personal-devcon
+just push    # build, test, then push to Docker Hub
 ```
 
-`just push` reads the Docker Hub username from your `docker login` session and
-needs `jq`. Override the image name or tag with `just image=foo tag=1.2.3 push`
-or the `IMAGE` / `TAG` environment variables.
+The image is published to Docker Hub as
+[`vandiver247/personal-devcon`](https://hub.docker.com/r/vandiver247/personal-devcon).
+`just push` needs a `docker login` session with push access to that repository.
+Override the image name or tag with `just image=foo/bar tag=1.2.3 push` or the
+`IMAGE` / `TAG` environment variables.
 
 Run the container:
 
 ```sh
-docker run -it personal-devcon:latest
+docker run -it vandiver247/personal-devcon:latest
 ```
 
 The image ships only the Docker client. To use `docker` or `k3d` inside the
@@ -44,7 +46,7 @@ container, mount the host's Docker socket and add its group:
 docker run -it \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --group-add "$(stat -c %g /var/run/docker.sock)" \
-  personal-devcon:latest
+  vandiver247/personal-devcon:latest
 ```
 
 The container runs as the `ubuntu` user (UID 1000) with passwordless sudo.
@@ -70,7 +72,7 @@ The apt prerequisites (git, curl, build-essential and similar) are not pinned.
 | Workflow | Trigger | What it does |
 |---|---|---|
 | [CI](.github/workflows/ci.yml) | Pull request to `main` | `just test` |
-| [Publish](.github/workflows/publish.yml) | Push to `main` (including merged PRs) | `just push` to Docker Hub |
+| [Publish](.github/workflows/publish.yml) | Push to `main` (including merged PRs) | `just push` to `vandiver247/personal-devcon` on Docker Hub |
 
 The Publish workflow needs two repository secrets:
 

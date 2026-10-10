@@ -7,6 +7,9 @@ on:
 permissions:
   contents: read
 
+env:
+  IMAGE: vandiver247/personal-devcon
+
 concurrency:
   group: publish
   cancel-in-progress: false
@@ -29,7 +32,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # `just push` builds, tests, then pushes under the logged-in Docker user.
+      # `just push` builds, tests, then pushes ${{ env.IMAGE }}:latest.
       - name: Build, test and push
         run: just push
         env:
