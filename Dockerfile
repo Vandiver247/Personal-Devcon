@@ -27,7 +27,10 @@ RUN apt-get update \
     && locale-gen en_US.UTF-8 \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME} \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    # The base image's pebble service manager is unused here and its binary
+    # embeds a Go standard library with known high CVEs.
+    && rm -f /usr/bin/pebble
 
 ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
@@ -55,8 +58,12 @@ ENV PATH=/home/${USERNAME}/.local/share/mise/shims:/home/${USERNAME}/.local/bin:
 COPY --chown=${USERNAME}:${USERNAME} mise.toml .config/mise/config.toml
 RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN \
     mise install --yes \
+    # docker-cli ships the whole Docker bundle; keep only the client and drop
+    # the unused daemon binaries (dockerd, containerd, runc and friends).
+    && find "$(mise where docker-cli)/docker" -type f ! -name docker -delete \
     && mise reshim \
     && mise cache clear \
+    && go clean -cache -modcache \
     && mkdir -p ~/.docker/cli-plugins \
     && ln -s "$(mise where github:docker/buildx)"/buildx-* ~/.docker/cli-plugins/docker-buildx \
     && ln -s "$(mise which docker-compose)" ~/.docker/cli-plugins/docker-compose \
@@ -67,7 +74,7 @@ RUN git init -q .config/nvim \
     && git -C .config/nvim fetch -q --depth 1 https://github.com/LazyVim/starter.git "${LAZYVIM_STARTER_COMMIT}" \
     && git -C .config/nvim checkout -q FETCH_HEAD \
     && rm -rf .config/nvim/.git
-COPY --chown=${USERNAME}:${USERNAME} nvim/lazyvim-pin.lua .config/nvim/lua/plugins/lazyvim-pin.lua
+COPY --chown=${USERNAME}:${USERNAME} nvim/*.lua .config/nvim/lua/plugins/
 COPY --chown=${USERNAME}:${USERNAME} nvim/lazy-lock.json .config/nvim/lazy-lock.json
 RUN nvim --headless "+Lazy! restore" +qa
 

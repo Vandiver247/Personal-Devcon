@@ -23,6 +23,10 @@ docker-compose = "5.6.0"
 # LazyVim runtime dependencies
 ripgrep = "15.2.0"
 fd = "10.5.0"
-fzf = "0.74.4"
-lazygit = "0.66.0"
 tree-sitter = "0.27.1"
+
+# Built from source with the Go pinned above, because the upstream release
+# binaries of these versions embed a Go standard library with known high CVEs.
+"go:github.com/junegunn/fzf" = "0.74.4"
+"go:github.com/jesseduffield/lazygit" = "0.66.0"
+"go:mvdan.cc/sh/v3/cmd/shfmt" = "3.14.1"

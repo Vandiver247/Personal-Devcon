@@ -46,6 +46,7 @@ test: build
     fd --version
     fzf --version
     lazygit --version
+    shfmt --version
     tree-sitter --version
     # LazyVim must load without errors and report its version
     lazyvim="$(nvim --headless "+lua io.stdout:write(require('lazyvim.config').version)" +qa)"
