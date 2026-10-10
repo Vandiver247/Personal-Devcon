@@ -54,6 +54,17 @@ docker run -it \
 
 The container runs as the `ubuntu` user (UID 1000) with passwordless sudo.
 
+### VS Code
+
+This repo has a [dev container configuration](.devcontainer/devcontainer.json)
+that opens it inside `vandiver247/personal-devcon:latest`. With the
+[Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+installed, run **Dev Containers: Reopen in Container**.
+
+Docker reuses a locally cached `latest`, so run
+`docker pull vandiver247/personal-devcon:latest` and then
+**Dev Containers: Rebuild Container** to pick up a newly published image.
+
 ## Where versions are pinned
 
 | What | Where |

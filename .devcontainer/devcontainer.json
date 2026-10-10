@@ -1,0 +1,6 @@
+{
+  "name": "personal-devcon",
+  // The image this repo builds and publishes from main (see .github/workflows/publish.yml).
+  "image": "vandiver247/personal-devcon:latest",
+  "remoteUser": "ubuntu"
+}
