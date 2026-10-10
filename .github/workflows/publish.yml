@@ -1,0 +1,36 @@
+name: Publish
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build, test and push image to Docker Hub
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: extractions/setup-just@v4
+        with:
+          just-version: "1.58.0"
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # `just push` builds, tests, then pushes under the logged-in Docker user.
+      - name: Build, test and push
+        run: just push
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
