@@ -23,24 +23,60 @@ concurrency:
 
 jobs:
   publish:
-    name: Build, test and push image to Docker Hub
-    runs-on: ubuntu-latest
+    name: Build, test and push image (${{ matrix.arch }})
+    # Each architecture builds and tests on a native runner. If either fails,
+    # the manifest job is skipped and `latest` keeps pointing at the previous images.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    # The Docker Hub secrets live in this environment, which only runs from `main`.
+    environment: dockerhub
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: extractions/setup-just@v4
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
         with:
           just-version: "1.58.0"
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v4
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # `just push` builds, tests, then pushes ${{ env.IMAGE }}:latest.
+      # `just push` builds, tests, then pushes ${{ env.IMAGE }}:latest-${{ matrix.arch }}.
       - name: Build, test and push
         run: just push
         env:
           GITHUB_TOKEN: ${{ github.token }}
+
+  manifest:
+    name: Publish multi-arch manifest
+    needs: publish
+    runs-on: ubuntu-latest
+    # The Docker Hub secrets live in this environment, which only runs from `main`.
+    environment: dockerhub
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+        with:
+          just-version: "1.58.0"
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Points ${{ env.IMAGE }}:latest at both images, then checks it lists both platforms.
+      - name: Create and verify manifest
+        run: just manifest

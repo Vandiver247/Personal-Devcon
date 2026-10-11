@@ -4,6 +4,9 @@
 image := env("IMAGE", "vandiver247/personal-devcon")
 tag := env("TAG", "latest")
 local_ref := image + ":" + tag
+# `push` publishes this machine's build as `<tag>-<arch>`; `manifest` joins the two into `<tag>`.
+docker_arch := if arch() == "aarch64" { "arm64" } else { "amd64" }
+arch_ref := local_ref + "-" + docker_arch
 # With GITHUB_TOKEN set, mise authenticates its GitHub API calls during the build.
 build_secret := if env("GITHUB_TOKEN", "") != "" { "--secret id=github_token,env=GITHUB_TOKEN" } else { "" }
 trivy_image := "aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa"
@@ -31,6 +34,7 @@ test: build
     just --version
     go version
     python --version
+    uv --version
     node --version
     npm --version
     nvim --version | head -n 1
@@ -58,9 +62,22 @@ test: build
     EOF
     echo "all checks passed for {{ local_ref }}"
 
-# Build, test, then push to Docker Hub (needs a `docker login` with push access)
+# Build, test, then push this machine's architecture to Docker Hub as `<tag>-<arch>` (needs a `docker login` with push access)
 push: test
-    docker push {{ local_ref }}
+    docker tag {{ local_ref }} {{ arch_ref }}
+    docker push {{ arch_ref }}
+
+# Join the pushed `<tag>-amd64` and `<tag>-arm64` images into the multi-arch `<tag>`, then check it lists both
+manifest:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    docker buildx imagetools create --tag {{ local_ref }} {{ local_ref }}-amd64 {{ local_ref }}-arm64
+    platforms="$(docker buildx imagetools inspect {{ local_ref }} | grep -oP 'Platform:\s+\Klinux/\S+' | sort | xargs)"
+    if [[ "$platforms" != "linux/amd64 linux/arm64" ]]; then
+        echo "{{ local_ref }} should list linux/amd64 and linux/arm64, but lists: ${platforms:-nothing}" >&2
+        exit 1
+    fi
+    echo "{{ local_ref }} is published for $platforms"
 
 # Build the image, then scan it with Trivy; fails on any critical, or any high with a fix available
 scan: build
@@ -78,5 +95,5 @@ scan: build
 outdated:
     @python3 scripts/outdated_report.py --image {{ local_ref }}
 
-# Full CI pipeline: build, test, push
+# Full CI pipeline for one architecture: build, test, push
 ci: push
