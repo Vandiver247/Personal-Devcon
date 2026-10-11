@@ -3,6 +3,13 @@ name: Publish
 on:
   push:
     branches: [main]
+    # Only the files that go into the image: a push that touches nothing else
+    # (workflows, .devcontainer, README, scripts) does not rebuild or publish.
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - mise.toml
+      - nvim/**
 
 permissions:
   contents: read
