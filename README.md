@@ -89,7 +89,7 @@ The apt prerequisites (git, curl, build-essential and similar) are not pinned.
 | [CI](.github/workflows/ci.yml) | Pull request to `main` | `just test` |
 | [Version report](.github/workflows/version-report.yml) | Pull request to `main` | Comments on the PR with any pinned tools, Neovim plugins (lazy.nvim's own check, run in the built image) or Ubuntu LTS release that have newer versions. Informational, not a merge gate |
 | [Security](.github/workflows/security.yml) | Pull request to `main` | `just scan`: Trivy scan of the built image, posted as a PR comment. Fails on any critical finding, or any high finding with a fix available |
-| [Publish](.github/workflows/publish.yml) | Push to `main` (including merged PRs) | `just push` to `vandiver247/personal-devcon` on Docker Hub |
+| [Publish](.github/workflows/publish.yml) | Push to `main` (including merged PRs) that changes the image: `Dockerfile`, `.dockerignore`, `mise.toml` or `nvim/` | `just push` to `vandiver247/personal-devcon` on Docker Hub |
 | [Scheduled build](.github/workflows/scheduled-build.yml) | Every Monday at 06:00 UTC, or manually | Rebuilds from scratch to pick up base image and apt updates, runs `just test`, and republishes `latest` if it passes. Also runs `just scan` and adds the Trivy report to the run summary, but findings do not block the publish |
 
 The Publish and Scheduled build workflows need two repository secrets:
