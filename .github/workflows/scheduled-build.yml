@@ -1,0 +1,62 @@
+name: Scheduled build
+
+# Weekly rebuild from scratch, so the published image picks up base image and
+# apt package updates even when nothing in the repository changes.
+on:
+  schedule:
+    - cron: "0 6 * * 1" # every Monday at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: vandiver247/personal-devcon
+
+# Shares the Publish workflow's group so the two never push at the same time.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    name: Rebuild, check and republish image
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: extractions/setup-just@v4
+        with:
+          just-version: "1.58.0"
+
+      - name: Build and test
+        run: just test
+
+      # Informational: findings are reported in the summary but never block the publish.
+      - name: Scan image
+        run: just scan
+        continue-on-error: true
+
+      - name: Add scan report to summary
+        if: always() && hashFiles('trivy-report.md') != ''
+        run: cat trivy-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload full scan results
+        if: always() && hashFiles('trivy-results.json') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: trivy-results
+          path: trivy-results.json
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Only reached when the build and smoke test passed; pushes the image built above.
+      - name: Push
+        run: docker push "$IMAGE:latest"

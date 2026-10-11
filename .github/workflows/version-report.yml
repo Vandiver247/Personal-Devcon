@@ -16,7 +16,7 @@ jobs:
   report:
     name: Report outdated tools
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     env:
       GITHUB_TOKEN: ${{ github.token }}
     steps:
@@ -34,6 +34,10 @@ jobs:
             "https://github.com/jdx/mise/releases/download/v${version}/mise-v${version}-linux-x64"
           sudo chmod 0755 /usr/local/bin/mise
           mise --version
+
+      # The Neovim plugin check runs inside the image built from this checkout.
+      - name: Build image
+        run: just build
 
       - name: Generate report
         run: |

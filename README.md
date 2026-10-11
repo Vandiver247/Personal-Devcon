@@ -8,11 +8,12 @@ pinned to an exact version, and nearly all of them are installed and managed by
 
 | Category | Tools |
 |---|---|
-| Languages | go, python |
+| Languages | go, python, node (with npm) |
 | Task running | just, mise |
 | Editor | neovim with [LazyVim](https://www.lazyvim.org) (plus ripgrep, fd, fzf, lazygit, tree-sitter) |
 | Kubernetes | k3d, kubectl, helm, k9s |
 | Cloud and SCM | aws-cli, gh |
+| Docs | [docz](https://github.com/donaldgifford/docz) |
 | AI | Claude Code (`claude`) |
 | Containers | docker CLI, buildx, compose (client only) |
 
@@ -27,7 +28,7 @@ just build   # build vandiver247/personal-devcon:latest
 just test    # build, then verify every pinned tool is installed and runs
 just push    # build, test, then push to Docker Hub
 just scan    # build, then scan the image with Trivy
-just outdated  # report pinned tools that have newer versions (needs mise and python3)
+just outdated  # report pinned tools, Neovim plugins and the Ubuntu LTS that have newer versions (needs mise and python3)
 ```
 
 The image is published to Docker Hub as
@@ -86,11 +87,12 @@ The apt prerequisites (git, curl, build-essential and similar) are not pinned.
 | Workflow | Trigger | What it does |
 |---|---|---|
 | [CI](.github/workflows/ci.yml) | Pull request to `main` | `just test` |
-| [Version report](.github/workflows/version-report.yml) | Pull request to `main` | Comments on the PR with any pinned tools that have newer versions. Informational, not a merge gate |
+| [Version report](.github/workflows/version-report.yml) | Pull request to `main` | Comments on the PR with any pinned tools, Neovim plugins (lazy.nvim's own check, run in the built image) or Ubuntu LTS release that have newer versions. Informational, not a merge gate |
 | [Security](.github/workflows/security.yml) | Pull request to `main` | `just scan`: Trivy scan of the built image, posted as a PR comment. Fails on any critical finding, or any high finding with a fix available |
 | [Publish](.github/workflows/publish.yml) | Push to `main` (including merged PRs) | `just push` to `vandiver247/personal-devcon` on Docker Hub |
+| [Scheduled build](.github/workflows/scheduled-build.yml) | Every Monday at 06:00 UTC, or manually | Rebuilds from scratch to pick up base image and apt updates, runs `just test`, and republishes `latest` if it passes. Also runs `just scan` and adds the Trivy report to the run summary, but findings do not block the publish |
 
-The Publish workflow needs two repository secrets:
+The Publish and Scheduled build workflows need two repository secrets:
 
 - `DOCKERHUB_USERNAME`: your Docker Hub username
 - `DOCKERHUB_TOKEN`: a Docker Hub access token with write access
