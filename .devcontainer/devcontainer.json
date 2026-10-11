@@ -2,5 +2,13 @@
   "name": "personal-devcon",
   // The image this repo builds and publishes from main (see .github/workflows/publish.yml).
   "image": "vandiver247/personal-devcon:latest",
-  "remoteUser": "ubuntu"
+  "remoteUser": "ubuntu",
+  // The image ships only the Docker client: use the host's daemon through its socket.
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  // Give the user the socket's group. Docker Desktop presents the socket as
+  // root:root (gid 0); on a native Linux engine export DOCKER_GID on the host,
+  // e.g. `export DOCKER_GID=$(stat -c %g /var/run/docker.sock)`.
+  "runArgs": ["--group-add", "${localEnv:DOCKER_GID:0}"]
 }
