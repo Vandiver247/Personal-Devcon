@@ -31,6 +31,8 @@ test: build
     just --version
     go version
     python --version
+    node --version
+    npm --version
     nvim --version | head -n 1
     k3d version
     kubectl version --client
@@ -47,6 +49,7 @@ test: build
     fzf --version
     lazygit --version
     shfmt --version
+    docz version
     tree-sitter --version
     # LazyVim must load without errors and report its version
     lazyvim="$(nvim --headless "+lua io.stdout:write(require('lazyvim.config').version)" +qa)"
@@ -70,9 +73,10 @@ scan: build
         > trivy-results.json
     python3 scripts/trivy_report.py trivy-results.json --output trivy-report.md
 
-# Report pinned tools that have newer versions available (needs mise on the host)
+# Report pinned tools that have newer versions available (needs mise on the host).
+# The Neovim plugin check runs in the image: `just build` first to check this checkout.
 outdated:
-    @python3 scripts/outdated_report.py
+    @python3 scripts/outdated_report.py --image {{ local_ref }}
 
 # Full CI pipeline: build, test, push
 ci: push
