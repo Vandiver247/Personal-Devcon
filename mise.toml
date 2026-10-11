@@ -5,6 +5,7 @@
 just = "1.58.0"
 go = "1.27.2"
 python = "3.15.0"
+uv = "0.13.0"
 node = "26.11.1" # bundles npm
 neovim = "0.12.6"
 k3d = "5.9.0"
