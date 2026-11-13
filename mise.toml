@@ -3,33 +3,33 @@
 
 [tools]
 just = "1.59.0"
-go = "1.27.3"
+go = "1.27.4"
 python = "3.15.2"
-uv = "0.13.6"
-node = "26.13.0" # bundles npm
+uv = "0.13.8"
+node = "26.13.1" # bundles npm
 neovim = "0.12.6"
 k3d = "5.9.0"
-aws-cli = "2.39.0"
-gh = "2.103.3"
-claude = "2.1.312"
-kubectl = "1.37.1"
+aws-cli = "2.40.1"
+gh = "2.104.0"
+claude = "2.1.322"
+kubectl = "1.37.2"
 helm = "4.3.1"
 k9s = "0.51.0"
 
 # Docker client only: the daemon comes from the host's mounted /var/run/docker.sock.
 # buildx is linked into ~/.docker/cli-plugins by the Dockerfile.
-docker-cli = "29.9.2"
-docker-compose = "5.6.1"
-"github:docker/buildx" = "0.38.1"
+docker-cli = "29.9.3"
+docker-compose = "5.7.1"
+"github:docker/buildx" = "0.39.0"
 
 # LazyVim runtime dependencies
 ripgrep = "15.2.0"
-fd = "10.5.0"
-tree-sitter = "0.27.1"
+fd = "10.5.2"
+tree-sitter = "0.27.2"
 
 # Built from source with the Go pinned above, because the upstream release
 # binaries of these versions embed a Go standard library with known high CVEs.
-"go:github.com/junegunn/fzf" = "0.74.5"
-"go:github.com/jesseduffield/lazygit" = "0.66.2"
+"go:github.com/junegunn/fzf" = "0.75.0"
+"go:github.com/jesseduffield/lazygit" = "0.66.3"
 "go:mvdan.cc/sh/v3/cmd/shfmt" = "3.14.1"
 "go:github.com/donaldgifford/docz/cmd/docz" = "1.2.2"
